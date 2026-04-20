@@ -258,6 +258,12 @@ def setup_events(coc_client: coc.EventsClient, bot):
     @coc.PlayerEvents.left_clan()
     async def on_left_clan(old: coc.Player, new: coc.Player):
         try:
+            # If new.clan is not None, the player swapped clans.
+            # We skip here to avoid duplicating the swap message,
+            # as on_joined_clan will also fire and handle the swap.
+            if new.clan is not None:
+                return
+
             msg = notifier.fmt_clan_change(old, new)
             if msg:
                 await _send(new.tag, msg)

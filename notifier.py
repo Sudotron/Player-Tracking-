@@ -227,9 +227,9 @@ def fmt_donations(old, new) -> str:
 def fmt_donations_received(old, new) -> str:
     diff = new.received - old.received
     return (
-        f"📥 <b>Received — {new.name}</b>\n"
+        f"📥 <b>Donation Received — {new.name}</b>\n"
         f"{SEP}\n"
-        f"📥 Received: <b>+{diff:,}</b>  (Season total: {new.received:,})\n"
+        f"📥 Donation Received: <b>+{diff:,}</b>  (Season total: {new.received:,})\n"
         f"🕐 {_now()}"
     )
 
