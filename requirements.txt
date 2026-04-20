@@ -1,0 +1,5 @@
+python-telegram-bot==21.5
+coc.py
+python-dotenv
+httpx
+aiohttp
