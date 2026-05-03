@@ -18,7 +18,7 @@ from functools import wraps
 
 import coc
 from dotenv import load_dotenv
-from telegram import Update, BotCommand, BotCommandScopeDefault, BotCommandScopeChat
+from telegram import Update, BotCommand, BotCommandScopeDefault, BotCommandScopeChat, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats
 from telegram.ext import Application, CommandHandler, ContextTypes, ChatMemberHandler
 
 import database as db
@@ -79,6 +79,7 @@ async def track_chats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = result.from_user
     
     if status in ["member", "administrator"]:
+        db.register_group(chat.id, chat.title or "Group")
         msg = f"➕ <b>Bot Added to Group</b>\nGroup: {chat.title} (<code>{chat.id}</code>)\nAdded By: {user.first_name} (<code>{user.id}</code>)"
         await notifier.send_bot_log(context.bot, BOT_LOG_CHANNEL, msg)
     elif status in ["left", "kicked"]:
@@ -94,6 +95,7 @@ async def set_bot_commands(bot):
         BotCommand("trackplayer", "Start tracking a player"),
         BotCommand("untrackplayer", "Stop tracking your current player"),
         BotCommand("mystats", "Live snapshot of your tracked player"),
+        BotCommand("clanaudit", "Get analytics and profiles for a clan"),
     ]
     owner_commands = user_commands + [
         BotCommand("tracklist", "View all tracked players (Owner)"),
@@ -101,6 +103,8 @@ async def set_bot_commands(bot):
     ]
     try:
         await bot.set_my_commands(user_commands, scope=BotCommandScopeDefault())
+        await bot.set_my_commands(user_commands, scope=BotCommandScopeAllPrivateChats())
+        await bot.set_my_commands(user_commands, scope=BotCommandScopeAllGroupChats())
         if OWNER_ID:
             await bot.set_my_commands(owner_commands, scope=BotCommandScopeChat(chat_id=OWNER_ID))
     except Exception as e:
@@ -311,6 +315,14 @@ async def cmd_botlog(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_clanaudit(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🚧 <b>This command is currently in Beta.</b>\n"
+        "Please check back later!",
+        parse_mode="HTML"
+    )
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 async def main():
@@ -347,6 +359,7 @@ async def main():
     app.add_handler(CommandHandler("mystats",       cmd_mystats))
     app.add_handler(CommandHandler("tracklist",     cmd_tracklist))
     app.add_handler(CommandHandler("botlog",        cmd_botlog))
+    app.add_handler(CommandHandler("clanaudit",     cmd_clanaudit))
     
     # ── Event routing ─────────────────────────────────────────────────────────
     app.add_handler(ChatMemberHandler(track_chats, ChatMemberHandler.MY_CHAT_MEMBER))
